@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TorneosYA — Crea tu torneo, nosotros lo llenamos</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #00FF87;
+    --green-dark: #00CC6A;
+    --black: #0a0a0a;
+    --gray: #1a1a1a;
+    --gray2: #2a2a2a;
+    --white: #f5f5f0;
+    --muted: #888;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'Inter', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--font-body);
+    overflow-x: hidden;
+  }
+
+  /* CANVAS 3D */
+  #canvas-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 4rem;
+    background: rgba(10,10,10,0.7);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .logo {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    letter-spacing: 0.05em;
+    color: var(--green);
+  }
+
+  .logo span { color: var(--white); }
+
+  nav ul {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+  }
+
+  nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  nav a:hover { color: var(--white); }
+
+  .nav-cta {
+    background: var(--green);
+    color: var(--black) !important;
+    padding: 0.6rem 1.5rem;
+    border-radius: 2px;
+    font-weight: 600 !important;
+    transition: background 0.2s !important;
+  }
+
+  .nav-cta:hover { background: var(--green-dark) !important; }
+
+  /* HERO */
+  #hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 0 4rem;
+  }
+
+  .hero-content {
+    max-width: 700px;
+  }
+
+  .hero-badge {
+    display: inline-block;
+    background: rgba(0,255,135,0.1);
+    color: var(--green);
+    border: 1px solid rgba(0,255,135,0.3);
+    padding: 0.4rem 1rem;
+    border-radius: 2px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(4rem, 10vw, 9rem);
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    margin-bottom: 1.5rem;
+    color: var(--white);
+  }
+
+  h1 .accent { color: var(--green); }
+
+  .hero-sub {
+    font-size: 1.1rem;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 480px;
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .btn-primary {
+    background: var(--green);
+    color: var(--black);
+    padding: 1rem 2.5rem;
+    border: none;
+    border-radius: 2px;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-primary:hover { background: var(--green-dark); transform: translateY(-2px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-ghost {
+    color: var(--white);
+    padding: 1rem 2rem;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 2px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    background: none;
+    transition: border-color 0.2s, color 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-ghost:hover { border-color: var(--green); color: var(--green); }
+
+  .hero-stats {
+    margin-top: 4rem;
+    display: flex;
+    gap: 3rem;
+  }
+
+  .stat-val {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    color: var(--green);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 0.3rem;
+  }
+
+  /* SCROLL INDICATOR */
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--muted);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    animation: bounce 2s infinite;
+  }
+
+  .scroll-line {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--green), transparent);
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(6px); }
+  }
+
+  /* HOW IT WORKS */
+  #como-funciona {
+    position: relative;
+    z-index: 1;
+    padding: 8rem 4rem;
+  }
+
+  .section-label {
+    font-size: 0.75rem;
+    color: var(--green);
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    line-height: 1;
+    margin-bottom: 4rem;
+  }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .step {
+    background: var(--black);
+    padding: 3rem 2.5rem;
+    position: relative;
+    transition: background 0.3s;
+  }
+
+  .step:hover { background: var(--gray); }
+
+  .step-num {
+    font-family: var(--font-display);
+    font-size: 5rem;
+    color: rgba(0,255,135,0.12);
+    line-height: 1;
+    margin-bottom: 1.5rem;
+  }
+
+  .step-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .step h3 {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+    color: var(--white);
+  }
+
+  .step p {
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* FORM SECTION */
+  #crear-torneo {
+    position: relative;
+    z-index: 1;
+    padding: 8rem 4rem;
+    background: rgba(26,26,26,0.6);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .form-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6rem;
+    align-items: start;
+    max-width: 1200px;
+  }
+
+  .form-intro h2 {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    line-height: 1;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-intro p {
+    color: var(--muted);
+    line-height: 1.8;
+    margin-bottom: 2rem;
+  }
+
+  .commission-box {
+    background: rgba(0,255,135,0.08);
+    border: 1px solid rgba(0,255,135,0.25);
+    border-radius: 4px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .commission-box .big-num {
+    font-family: var(--font-display);
+    font-size: 3.5rem;
+    color: var(--green);
+    line-height: 1;
+  }
+
+  .commission-box p {
+    font-size: 0.85rem;
+    color: rgba(0,255,135,0.7);
+    margin-bottom: 0;
+    margin-top: 0.3rem;
+  }
+
+  .perks {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  .perk {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  .perk-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+  }
+
+  /* FORM */
+  .tournament-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .field label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 2px;
+    color: var(--white);
+    padding: 0.85rem 1rem;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    width: 100%;
+  }
+
+  .field input::placeholder,
+  .field textarea::placeholder {
+    color: rgba(255,255,255,0.2);
+  }
+
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    border-color: var(--green);
+    background: rgba(0,255,135,0.04);
+  }
+
+  .field select option { background: #1a1a1a; }
+
+  .field textarea { resize: vertical; min-height: 90px; }
+
+  .field-full { grid-column: 1 / -1; }
+
+  .submit-btn {
+    width: 100%;
+    background: var(--green);
+    color: var(--black);
+    border: none;
+    padding: 1.1rem;
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    border-radius: 2px;
+    margin-top: 0.5rem;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .submit-btn:hover { background: var(--green-dark); transform: translateY(-2px); }
+
+  .form-note {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 0.5rem;
+  }
+
+  /* SUCCESS */
+  .success-msg {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+    padding: 3rem 2rem;
+    border: 1px solid rgba(0,255,135,0.3);
+    border-radius: 4px;
+    background: rgba(0,255,135,0.05);
+  }
+
+  .success-icon {
+    font-size: 3rem;
+  }
+
+  .success-msg h3 {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    color: var(--green);
+  }
+
+  .success-msg p { color: var(--muted); font-size: 0.9rem; }
+
+  /* SPORTS ICONS SECTION */
+  #deportes {
+    position: relative;
+    z-index: 1;
+    padding: 6rem 4rem;
+  }
+
+  .sports-scroll {
+    display: flex;
+    gap: 1px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+    margin-top: 3rem;
+  }
+
+  .sport-card {
+    flex: 1;
+    min-width: 140px;
+    padding: 2.5rem 1.5rem;
+    background: var(--black);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: background 0.3s;
+    text-align: center;
+  }
+
+  .sport-card:hover { background: var(--gray); }
+
+  .sport-card:hover .sport-icon { transform: scale(1.15) rotate(-5deg); }
+
+  .sport-icon {
+    font-size: 2.5rem;
+    transition: transform 0.3s;
+    display: block;
+  }
+
+  .sport-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 1;
+    padding: 4rem 4rem 2rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-logo {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--green);
+  }
+
+  .footer-logo span { color: var(--muted); }
+
+  footer p {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  /* Animations */
+  .fade-up {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .fade-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (max-width: 900px) {
+    nav { padding: 1rem 1.5rem; }
+    nav ul { display: none; }
+    #hero, #como-funciona, #crear-torneo, #deportes, footer { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .steps-grid { grid-template-columns: 1fr; }
+    .form-layout { grid-template-columns: 1fr; gap: 3rem; }
+    .form-row { grid-template-columns: 1fr; }
+    .hero-stats { gap: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="canvas-bg"></canvas>
+
+<nav>
+  <div class="logo">Torneos<span>YA</span></div>
+  <ul>
+    <li><a href="#como-funciona">Cómo funciona</a></li>
+    <li><a href="#deportes">Deportes</a></li>
+    <li><a href="#crear-torneo">Precios</a></li>
+  </ul>
+  <a href="#crear-torneo" class="nav-cta">Crear torneo</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-content">
+    <div class="hero-badge">⚡ Plataforma de torneos deportivos</div>
+    <h1>CREA.<br>PUBLICA.<br><span class="accent">LLENA.</span></h1>
+    <p class="hero-sub">
+      Organiza tu torneo en minutos. Nosotros lo promocionamos en redes sociales y tú te quedas con todo el dinero menos nuestra pequeña comisión.
+    </p>
+    <div class="hero-actions">
+      <a href="#crear-torneo" class="btn-primary">Crear mi torneo →</a>
+      <a href="#como-funciona" class="btn-ghost">Ver cómo funciona</a>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="stat-val">0%</div>
+        <div class="stat-label">coste inicial</div>
+      </div>
+      <div>
+        <div class="stat-val">10%</div>
+        <div class="stat-label">comisión por inscripción</div>
+      </div>
+      <div>
+        <div class="stat-val">6+</div>
+        <div class="stat-label">deportes disponibles</div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- SPORTS -->
+<section id="deportes">
+  <p class="section-label">Deportes disponibles</p>
+  <h2 class="section-title fade-up">PARA TODOS<br>LOS DEPORTES</h2>
+  <div class="sports-scroll fade-up">
+    <div class="sport-card"><span class="sport-icon">⚽</span><span class="sport-name">Fútbol</span></div>
+    <div class="sport-card"><span class="sport-icon">🏀</span><span class="sport-name">Baloncesto</span></div>
+    <div class="sport-card"><span class="sport-icon">🎾</span><span class="sport-name">Pádel</span></div>
+    <div class="sport-card"><span class="sport-icon">🏐</span><span class="sport-name">Voleibol</span></div>
+    <div class="sport-card"><span class="sport-icon">🏃</span><span class="sport-name">Running</span></div>
+    <div class="sport-card"><span class="sport-icon">🏋️</span><span class="sport-name">Fitness</span></div>
+    <div class="sport-card"><span class="sport-icon">🎱</span><span class="sport-name">Otro</span></div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="como-funciona">
+  <p class="section-label">El proceso</p>
+  <h2 class="section-title fade-up">ASÍ DE<br>FÁCIL</h2>
+  <div class="steps-grid">
+    <div class="step fade-up">
+      <div class="step-num">01</div>
+      <h3>CREA TU TORNEO</h3>
+      <p>Rellena el formulario con las normas, fechas, precio de inscripción y ubicación. En menos de 5 minutos está listo.</p>
+    </div>
+    <div class="step fade-up" style="transition-delay:0.15s">
+      <div class="step-num">02</div>
+      <h3>NOSOTROS LO MOVEMOS</h3>
+      <p>Publicamos tu torneo en TikTok e Instagram y lo llegamos a miles de deportistas en tu zona. Sin que pagues publicidad.</p>
+    </div>
+    <div class="step fade-up" style="transition-delay:0.3s">
+      <div class="step-num">03</div>
+      <h3>COBRA Y JUEGA</h3>
+      <p>Los equipos se inscriben y pagan. Tú recibes el dinero directamente menos un 10% de comisión por cada inscripción.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FORM -->
+<section id="crear-torneo">
+  <div class="form-layout">
+    <div class="form-intro fade-up">
+      <p class="section-label">Empieza ya</p>
+      <h2>PUBLICA<br>TU TORNEO</h2>
+      <p>Sin costes por adelantado. Solo pagamos entre los dos cuando alguien se inscribe. Así de justo.</p>
+      <div class="commission-box">
+        <div class="big-num">10%</div>
+        <p>de comisión por equipo inscrito. El resto es tuyo.</p>
+      </div>
+      <div class="perks">
+        <div class="perk"><span class="perk-dot"></span>Promoción gratuita en redes sociales</div>
+        <div class="perk"><span class="perk-dot"></span>Página pública del torneo compartible</div>
+        <div class="perk"><span class="perk-dot"></span>Gestión de inscripciones incluida</div>
+        <div class="perk"><span class="perk-dot"></span>Soporte directo por WhatsApp</div>
+        <div class="perk"><span class="perk-dot"></span>Pago por Bizum o transferencia</div>
+      </div>
+    </div>
+
+    <div class="fade-up" style="transition-delay:0.2s">
+      <div class="tournament-form" id="torneoForm">
+        <div class="field">
+          <label>Nombre del torneo</label>
+          <input type="text" placeholder="ej. Copa Verano Madrid 2025" id="nombre" required />
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Deporte</label>
+            <select id="deporte">
+              <option value="">Seleccionar...</option>
+              <option>Fútbol 7</option>
+              <option>Fútbol 11</option>
+              <option>Pádel</option>
+              <option>Baloncesto</option>
+              <option>Voleibol</option>
+              <option>Running</option>
+              <option>Otro</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Ciudad</label>
+            <input type="text" placeholder="Madrid" id="ciudad" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Ubicación / Campo</label>
+          <input type="text" placeholder="ej. Ciudad Deportiva La Peineta" id="ubicacion" />
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Fecha de inicio</label>
+            <input type="date" id="fecha" />
+          </div>
+          <div class="field">
+            <label>Límite de inscripción</label>
+            <input type="date" id="fechaLimite" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Equipos máx.</label>
+            <input type="number" placeholder="8" min="2" id="equipos" />
+          </div>
+          <div class="field">
+            <label>Precio por equipo (€)</label>
+            <input type="number" placeholder="60" min="0" id="precio" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Normas y descripción</label>
+          <textarea placeholder="Categoría de edad, nivel, premios, normas importantes..." id="normas"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Tu nombre</label>
+            <input type="text" placeholder="Nombre del organizador" id="orgNombre" />
+          </div>
+          <div class="field">
+            <label>WhatsApp / Teléfono</label>
+            <input type="tel" placeholder="+34 600 000 000" id="telefono" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" placeholder="correo@ejemplo.com" id="email" />
+        </div>
+        <button class="submit-btn" onclick="enviarTorneo()">PUBLICAR TORNEO →</button>
+        <p class="form-note">Al enviar, nuestro equipo lo revisará y contactará contigo en menos de 24h.</p>
+      </div>
+
+      <div class="success-msg" id="successMsg">
+        <div class="success-icon">✅</div>
+        <h3>¡TORNEO ENVIADO!</h3>
+        <p>Nos pondremos en contacto contigo por WhatsApp o email en menos de 24 horas para confirmar y publicar tu torneo.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">Torneos<span>YA</span></div>
+  <p>© 2025 TorneosYA — Madrid, España</p>
+  <p style="font-size:0.75rem; color: #555;">Made with ⚡ for amateur sports</p>
+</footer>
+
+<!-- EMAILJS -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>emailjs.init('GhAQ1YgKom1WjrLF8');</script>
+<!-- THREE.JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// 3D BACKGROUND
+const canvas = document.getElementById('canvas-bg');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(0, 0, 30);
+
+// Particles
+const particleCount = 1800;
+const positions = new Float32Array(particleCount * 3);
+const colors = new Float32Array(particleCount * 3);
+
+for (let i = 0; i < particleCount; i++) {
+  positions[i * 3] = (Math.random() - 0.5) * 120;
+  positions[i * 3 + 1] = (Math.random() - 0.5) * 120;
+  positions[i * 3 + 2] = (Math.random() - 0.5) * 80 - 20;
+
+  const isGreen = Math.random() > 0.7;
+  colors[i * 3] = isGreen ? 0 : 0.3;
+  colors[i * 3 + 1] = isGreen ? 1 : 0.3;
+  colors[i * 3 + 2] = isGreen ? 0.53 : 0.3;
+}
+
+const geo = new THREE.BufferGeometry();
+geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+const mat = new THREE.PointsMaterial({
+  size: 0.18,
+  vertexColors: true,
+  transparent: true,
+  opacity: 0.6
+});
+
+const particles = new THREE.Points(geo, mat);
+scene.add(particles);
+
+// Floating wireframe spheres
+const sphereGeo = new THREE.IcosahedronGeometry(4, 1);
+const sphereMat = new THREE.MeshBasicMaterial({
+  color: 0x00FF87,
+  wireframe: true,
+  transparent: true,
+  opacity: 0.08
+});
+
+const sphere1 = new THREE.Mesh(sphereGeo, sphereMat);
+sphere1.position.set(18, 8, -10);
+scene.add(sphere1);
+
+const sphere2 = new THREE.Mesh(new THREE.IcosahedronGeometry(6, 1), new THREE.MeshBasicMaterial({
+  color: 0x00FF87, wireframe: true, transparent: true, opacity: 0.05
+}));
+sphere2.position.set(-20, -10, -15);
+scene.add(sphere2);
+
+const sphere3 = new THREE.Mesh(new THREE.IcosahedronGeometry(2.5, 1), new THREE.MeshBasicMaterial({
+  color: 0xffffff, wireframe: true, transparent: true, opacity: 0.06
+}));
+sphere3.position.set(5, -15, -5);
+scene.add(sphere3);
+
+// ---- SOCCER BALL ----
+const ballGroup = new THREE.Group();
+scene.add(ballGroup);
+
+// Main sphere
+const ballGeo = new THREE.SphereGeometry(3.2, 64, 64);
+const ballMat = new THREE.MeshPhongMaterial({ color: 0xf5f5f0, shininess: 80 });
+const ballMesh = new THREE.Mesh(ballGeo, ballMat);
+ballGroup.add(ballMesh);
+
+// Realistic soccer ball: 12 black pentagons on icosahedron vertices (Buckminster fullerene pattern)
+const phi = (1 + Math.sqrt(5)) / 2;
+const icosaVerts = [
+  [-1,  phi, 0], [ 1,  phi, 0], [-1, -phi, 0], [ 1, -phi, 0],
+  [0, -1,  phi], [0,  1,  phi], [0, -1, -phi], [0,  1, -phi],
+  [ phi, 0, -1], [ phi, 0,  1], [-phi, 0, -1], [-phi, 0,  1],
+];
+
+const patchMat = new THREE.MeshPhongMaterial({ color: 0x0a0a0a, shininess: 90 });
+
+icosaVerts.forEach(([x, y, z]) => {
+  const dir = new THREE.Vector3(x, y, z).normalize();
+  const patchGeo = new THREE.CircleGeometry(0.88, 5);
+  const patch = new THREE.Mesh(patchGeo, patchMat);
+  patch.position.copy(dir.clone().multiplyScalar(3.24));
+  patch.lookAt(dir.clone().multiplyScalar(20));
+  patch.rotateZ(Math.PI / 10);
+  ballGroup.add(patch);
+});
+
+// Faint seam lines
+const seamGeo = new THREE.IcosahedronGeometry(3.26, 1);
+const seamEdges = new THREE.EdgesGeometry(seamGeo);
+const seamMat = new THREE.LineBasicMaterial({ color: 0x333333, transparent: true, opacity: 0.4 });
+const seamLines = new THREE.LineSegments(seamEdges, seamMat);
+ballGroup.add(seamLines);
+
+// Lighting for the ball
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambientLight);
+
+const dirLight = new THREE.DirectionalLight(0x00FF87, 1.2);
+dirLight.position.set(10, 15, 20);
+scene.add(dirLight);
+
+const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.6);
+dirLight2.position.set(-10, -5, 10);
+scene.add(dirLight2);
+
+// Ball start position (right side of hero, in 3D space)
+ballGroup.position.set(14, 2, 5);
+
+// Mouse parallax
+let mouseX = 0, mouseY = 0;
+document.addEventListener('mousemove', e => {
+  mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+  mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+
+let scrollY = 0;
+let lastScrollY = 0;
+let scrollVelocity = 0;
+window.addEventListener('scroll', () => {
+  scrollVelocity = window.scrollY - lastScrollY;
+  lastScrollY = window.scrollY;
+  scrollY = window.scrollY;
+});
+
+// Animate
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+
+  particles.rotation.y = t * 0.015 + mouseX * 0.05;
+  particles.rotation.x = mouseY * 0.03;
+
+  sphere1.rotation.x = t * 0.3;
+  sphere1.rotation.y = t * 0.2;
+
+  sphere2.rotation.x = t * 0.15;
+  sphere2.rotation.z = t * 0.25;
+
+  sphere3.rotation.y = t * 0.4;
+  sphere3.rotation.x = t * 0.3;
+
+  // Soccer ball: rolls and floats with scroll
+  const totalHeight = document.body.scrollHeight - window.innerHeight;
+  const scrollFraction = totalHeight > 0 ? scrollY / totalHeight : 0;
+
+  // Ball travels from right hero area → left mid → right bottom
+  const pathX = 14 - Math.sin(scrollFraction * Math.PI) * 28;
+  const pathY = 2 - scrollFraction * 18 + Math.sin(scrollFraction * Math.PI * 2) * 4;
+  const pathZ = 5 + Math.sin(scrollFraction * Math.PI * 1.5) * 3;
+
+  ballGroup.position.set(pathX, pathY, pathZ);
+
+  // Roll: rotate based on scroll speed + gentle idle spin
+  ballGroup.rotation.z -= scrollVelocity * 0.04;
+  ballGroup.rotation.x += scrollVelocity * 0.025;
+  ballGroup.rotation.y += 0.004 + Math.abs(scrollVelocity) * 0.01;
+
+  // Gentle bounce with time
+  ballGroup.position.y += Math.sin(t * 1.8) * 0.06;
+
+  // Mouse parallax subtle influence on ball
+  ballGroup.position.x += mouseX * 0.5;
+  ballGroup.position.y -= mouseY * 0.3;
+
+  camera.position.y = -scrollY * 0.008;
+  camera.position.x = mouseX * 0.5;
+
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Scroll reveal
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+// Form
+function enviarTorneo() {
+  const nombre = document.getElementById('nombre').value.trim();
+  const email = document.getElementById('email').value.trim();
+  if (!nombre || !email) {
+    alert('Por favor, rellena al menos el nombre del torneo y tu email.');
+    return;
+  }
+
+  const btn = document.querySelector('.submit-btn');
+  btn.textContent = 'ENVIANDO...';
+  btn.disabled = true;
+
+  const templateParams = {
+    nombre: nombre,
+    deporte: document.getElementById('deporte').value,
+    ciudad: document.getElementById('ciudad').value,
+    ubicacion: document.getElementById('ubicacion').value,
+    fecha: document.getElementById('fecha').value,
+    fechaLimite: document.getElementById('fechaLimite').value,
+    equipos: document.getElementById('equipos').value,
+    precio: document.getElementById('precio').value,
+    normas: document.getElementById('normas').value,
+    orgNombre: document.getElementById('orgNombre').value,
+    telefono: document.getElementById('telefono').value,
+    email_usuario: email,
+  };
+
+  emailjs.send('service_x2cwjdg', 'template_c7lzcur', templateParams)
+    .then(() => {
+      document.getElementById('torneoForm').style.display = 'none';
+      document.getElementById('successMsg').style.display = 'flex';
+    })
+    .catch((error) => {
+      console.error('EmailJS error:', error);
+      btn.textContent = 'PUBLICAR TORNEO →';
+      btn.disabled = false;
+      alert('Hubo un error al enviar. Inténtalo de nuevo.');
+    });
+}
+</script>
+</body>
+</html>
